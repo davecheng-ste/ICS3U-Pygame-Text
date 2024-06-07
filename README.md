@@ -1,90 +1,226 @@
-# Sprite Collisions in Pygame
-Many games and interactive programs rely on interactions between sprites or graphic objects on the screen. This tech demonstration shows a few ways you can handle these events.
-
-## Collisons between sprites using Rect objects
-To now, we have been using the `Rect` object in Pygame to draw (or `blit`) our surfaces and also to move them around with methods (e.g. `Rect.x`).
-
-The `Rect` object also gives us access to the `.colliderect()` method, which returns a Boolean (i.e. `True` or `False`) on the overlap or collision of two `Rect` objects. 
+# Displaying Text in Pygame
+Whether it is a score, timer, or instructions for the player, displaying text is a fundamental part of many Pygame projects. Here is a primer on how to work with text. 
 
 ![screenshot](images/screenshot01.png)
 
-The file [`collisions_good.py`](collisions_good.py) demonstrates what you can do when the shark and shrimp sprites collide:
+## Loading and Rendering Text
+To render text in Pygame, we have to follow these steps:
+
+- **Load a Font**: You can use the default font or specify a font file to load.
+- **Render Text**: Convert the text string into an image, i.e., a Pygame surface.
+- **Blit the Text**: Draw or "blit" the text surface onto the screen.
+
+### Step 1: Loading a Font
+You can load a font using `pygame.font.Font()`. To use the default system font, pass `None` as the first argument. The second argument is the **font size**.
 
 ```python
-# Handle shark and shrimp collisions
-if shark_rect.colliderect(shrimp_rect):
-    shrimp_rect.left = WIDTH
-    shrimp_rect.centery = random.randint(20, HEIGHT - 20)
-    # Increase score and rerender text surface
-    player_score += 1
-    text_score_string = f"Score: {player_score}"
-    text_score_surface = font_score.render(text_score_string, True, WHITE)
+# Load font
+font = pygame.font.Font(None, 32)  # None uses the default font, 32 is the font size
 ```
 
-The line `shark_rect.colliderect(shrimp_rect)` will return a Boolean if the two rects collide. We then handle the `True` condition to reset the shrimp position and increase the score.
-
-<br><br>
-
-## Optimizing graphics for sprite collisions
-Compare the two graphcis in this repo, [`shrimp.png`](images/shrimp.png) and [`shrimp_uncropped.png`](images/shrimp_uncropped.png):
-
-![screenshot](images/shrimp_screenshots.png)
-
-The transparent area (or "alpha channel") of the shrimp graphic on the left is much larger than the one on the right. If you are using uncropped images like the one on the left, your `Rect` objects might cause unexpected collision behaviour.
-
-See the version of my demo at [`collisions_problems_uncropped.py`](collisions_problems_uncropped.py). Here, I am using the uncropped shrimp graphic. You will see that the collision with the shark happens far earlier than expected.
-
-To avoid this, make sure your sprites are optimized by cropping unnecessary alpha channel background in an image editor such as [Photopea](https://photopea.com). Make sure to save your images as PNG to preserve the transparency.
-
-<br><br>
-
-## Collisons between sprites and mouse clicks
-Another collision method available to a `Rect` object is `.collidepoint()`. This method takes an (x, y) coordinate point as a tuple and returns a Boolean if the point is contained within the `Rect`.
-
-For example, the file [`collisions_plus_mouse.py`](collisions_plus_mouse.py) has this example:
+If you have a specific font file, provide the path to the file:
 
 ```python
-# Handle mouse clicks
-mouse_input = pygame.mouse.get_pressed()
-
-# Handle shrimp mouse clicks
-if mouse_input[0]:  # Check if left mouse button is pressed
-    mouse_pos = pygame.mouse.get_pos()
-    if shrimp_rect.collidepoint(mouse_pos):
-        shrimp_rect.left = WIDTH
-        shrimp_rect.centery = random.randint(20, HEIGHT - 20)
-        # Increase score and rerender text surface
-        player_score += 1
-        text_score_string = f"Score: {player_score}"
-        text_score_surface = font_score.render(text_score_string, True, WHITE)
+font = pygame.font.Font("path/to/font.ttf", 32)  # Replace with the path to your font file
 ```
 
-Similar to `pygame.key.get_pressed()`, we start by getting the state of mouse clicks with `pygame.mouse.get_pressed()`. It returns a tuple of Booleans giving the state of the left, middle, and right mouse buttons.
-
-Then, we handle the event only when the left-click is pressed with `mouse_input[0]`.
-
-Finally, we check the (x, y) coordinates of the mouse position with `shrimp_rect` using the `.collidepoint()` method here:
+### Step 2: Rendering Text
+Use the render method to convert a text string into a Pygame surface. You can specify the colour and other settings like anti-aliasing (font smoothing).
 
 ```python
-if shrimp_rect.collidepoint(mouse_pos):
+# Render text
+text_string = "Hello, Pygame!"
+text_colour = WHITE
+text_surface = font.render(text_string, True, text_colour)  # True for anti-aliasing
 ```
 
-<br><br>
-
-## Refactoring code for readability and modularity
-For the final example, I've refactored the code from [`collisions_good.py`](collisions_good.py) to clean it up. 
-
-Specifically, I tried to break down the organization of the game into a strict *input, processing, output* model. Look at my main game loop in th refactored version, [`collisions_refactored.py`](collisions_refactored.py):
+### Step 3: Positioning Text
+To position the text, create a `Rect` object to blit and position your rendered text. 
 
 ```python
-# Run main game loop
+# Get text rectangle
+text_rect = text_surface.get_rect()
+
+# Position text
+text_rect.center = (WIDTH // 2, HEIGHT // 2)  # Center of the screen
+```
+
+Remember, you can use many of the `Rect` methods to position the text. For example, we can also specify the aboslute position of the *top left* corner of `text_rect` using:
+
+```python
+# Position text 20 pixels in from top-left corner of screen
+text_rect.x = 20
+text_rect.y = 20
+```
+
+### Step 4: Blitting the Text
+Finally, draw the text surface onto the screen:
+
+```python
+# Draw text
+screen.blit(text_surface, text_rect)
+```
+
+### Full Example
+Here's a complete example incorporating all the steps:
+
+```python
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Pygame Text Handling")
+
+# Define constant colours
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Load font
+font = pygame.font.Font(None, 32)  # None uses the default font, 32 is the font size
+
+# Render text
+text_string = "Hello, Pygame!"
+text_colour = WHITE
+text_surface = font.render(text_string, True, text_colour)  # True for anti-aliasing
+
+# Get text rectangle
+text_rect = text_surface.get_rect()
+
+# Position text
+text_rect.center = (WIDTH // 2, HEIGHT // 2)  # Center of the screen
+
+clock = pygame.time.Clock()
+
 running = True
-
 while running:
-    handle_input()
-    update_game_state()
-    draw()
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Fill the screen with black
+    screen.fill(BLACK)
+    
+    # Draw text
+    screen.blit(text_surface, text_rect)
+    
+    # Update display
+    pygame.display.flip()
     clock.tick(30)
+
+# Quit Pygame
+pygame.quit()
+sys.exit()
 ```
 
-Allow yourself to write messy code to prioritize things working, but eventually, you also want your code to be clean and readable. 
+<br><br>
+
+## Changing Font Size and Font Type
+You can easily change the font size and type by modifying the arguments in `pygame.font.Font()`. 
+
+For example, to use a different font and size:
+
+```python
+# Load a specific font with a different size
+font = pygame.font.Font("path/to/your/font.ttf", 24)
+```
+
+Pygame should be able to support a variety of font formats, includingn TrueType (`.TTF`), OpenType (`.OTF`), and PostScript (`.PS`).
+
+<br><br>
+
+## Handling Multiple Texts
+To display multiple texts, repeat the rendering and blitting steps for each text item. 
+
+```python
+# Load font
+font_small = pygame.font.Font(None, 24)
+font_large = pygame.font.Font(None, 48)
+
+# Render texts
+text1_surface = font_small.render("Small Text", True, WHITE)
+text2_surface = font_large.render("Large Text", True, WHITE)
+
+# Get rectangles
+text1_rect = text1_surface.get_rect(topleft=(50, 50))
+text2_rect = text2_surface.get_rect(topright=(WIDTH - 50, 50))
+
+# Blit texts
+screen.blit(text1_surface, text1_rect)
+screen.blit(text2_surface, text2_rect)
+```
+<br><br>
+
+## Dynamic Text Variables
+To display text that changes as the program runs, we'll re-render the text surface and blit it to the screen.
+
+It's important to include the code to re-render the text surface inside the main game loop, since you want this to be updating constantly.
+
+### Full Example
+This [example](dynamic_text_example.py) displays a score that changes as the player mashes the space bar:
+
+```python
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Dynamic Text Example")
+
+# Define constant colours
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Load font
+font = pygame.font.Font(None, 32)  # None uses the default font, 32 is the font size
+
+# Initialize score
+score = 0
+
+# Render initial score text
+score_text = f"Score: {score}"  # We use f-strings here for formatting variables
+score_surface = font.render(score_text, True, WHITE)
+score_rect = score_surface.get_rect()
+score_rect.topleft = (10, 10)
+
+clock = pygame.time.Clock()
+
+running = True
+while running:
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+            elif event.key == pygame.K_SPACE:  # Press SPACE to increase score
+                score += 1  # Update score and re-render text surface starts here
+                score_text = f"Score: {score}"  
+                score_surface = font.render(score_text, True, WHITE)
+
+    # Fill the screen with black
+    screen.fill(BLACK)
+    
+    # Draw updated score
+    screen.blit(score_surface, score_rect)
+    
+    # Update display
+    pygame.display.flip()
+    clock.tick(30)
+
+# Quit Pygame
+pygame.quit()
+sys.exit()
+```
+
+Notice the text surface is re-rendered each game loop. We pull from the `score` variable, redefine the text string using [f-string formatting](https://fstring.help/), then re-render the text surface for blitting.
